@@ -46,3 +46,5 @@ near call <dev account name> make_bet '{"match_id": " ", "decision": " "}' --amo
 near view <dev account name> view_matches '{"match_id": " "}'
 near view <dev account name> view_bets '{"match_id": " ", "name": " "}'
 ```
+
+Please read through the pdf for a more in depth explanation of the code.
