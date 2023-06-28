@@ -1,5 +1,5 @@
 [package]
-name = "betting_with_frontend"
+name = "betting-system"
 version = "1.0.0"
 authors = ["Near Inc <hello@near.org>"]
 edition = "2021"
