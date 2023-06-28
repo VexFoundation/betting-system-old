@@ -44,8 +44,9 @@ near view <dev account name> view_bets '{"match_id": " ", "name": " "}'
 near view <dev account name> view_potential_winnings '{"match_id": " ", "team": " ", "bet_amount": " "}'
 ```
 
-The contract can be interacted with using the frontend via the command:
+The contract can be interacted with using the frontend via the command line (frontend):
 
 ```bash
+npm install
 npm start
 ```
