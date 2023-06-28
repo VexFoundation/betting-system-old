@@ -5,33 +5,28 @@ This is the smart contract and frontend for the betting system for the VEX proje
 
 # Quickstart
 
-1. Make sure you have installed [rust](https://rust.org/).
+1. Make sure you have installed [rust](https://rust.org/). (<1.70)
 2. Install the [`NEAR CLI`](https://github.com/near/near-cli#setup)
 
 <br />
 
-## 1. Build and Deploy the Contract
-You can automatically compile and deploy the contract in the NEAR testnet by running (inside of contract):
+## 1. Start the contract
+By running the below code the contract will be compiled, deployed and then the frontend launched.
 
 ```bash
-./deploy.sh
-```
-
-You may need to change the permissions on the deploy.sh and build.sh file, do this by running:
-
-```bash
-chmod +x deploy.sh
-chmod +x build.sh
-```
-
-Once finished, check the `neardev/dev-account` file to find the address in which the contract was deployed:
-
-```bash
-cat ./neardev/dev-account
-# e.g. dev-1659899566943-21539992274727
+chmod +x magic.sh
+./magic.sh
 ```
 
 <br />
+
+## 2. Interact with the contract via the CLI 
+
+Check the dev account the contract is deployed on
+```bash
+cat ./contract/neardev/dev-account
+# e.g. dev-1659899566943-21539992274727
+```
 
 The contract can be used via the CLI with the following commands: 
 
@@ -44,8 +39,4 @@ near view <dev account name> view_bets '{"match_id": " ", "name": " "}'
 near view <dev account name> view_potential_winnings '{"match_id": " ", "team": " ", "bet_amount": " "}'
 ```
 
-The contract can be interacted with using the frontend via the command:
-
-```bash
-npm start
-```
+<br />
