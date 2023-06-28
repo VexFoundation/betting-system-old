@@ -1,0 +1,156 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: black;
+
+  .top {
+    background-color: #FF3131;
+    padding: 20px;
+  }
+
+  .content {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .left {
+    width: 100%;
+    padding: 20px;
+  }
+
+  .right {
+    width: 0;
+    padding-top: 20px;
+    padding-right: 0;
+    padding-bottom: 20px;
+    padding-left: 0;
+    box-sizing: border-box;
+    opacity: 0;
+    overflow: hidden;
+    animation: expandWidth 1s forwards;
+  }
+  
+  @keyframes expandWidth {
+    from {
+      width: 0;
+      padding-right: 0;
+      padding-left: 0;
+      opacity: 0;
+    }
+    to {
+      width: 30%;
+      padding-right: 100px;
+      padding-left: 80px;
+      opacity: 1;
+    }
+  }
+  
+  .right-show > * {
+    opacity: 0;
+    transform: translateX(50px);
+    animation: slideIn 1s forwards;
+  }
+  
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(50px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  .bet-form-content {
+    display: flex;
+  }
+
+  .match-list {
+    overflow-y: auto;
+    max-height: 500px;
+  }
+
+  .match-preview {
+    display: flex;
+    align-items: center;
+    background-color: #FF3131;
+    border: none;
+    padding: 10px;
+    margin-bottom: 10px;
+    width: 100%;
+    cursor: pointer;
+    color: black;
+    text-align: left;
+
+    &:hover {
+      background-color: #dcdcdc;
+    }
+
+    h2 {
+      margin: 0;
+    }
+
+    p {
+      margin: 0;
+    }
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+
+    label {
+      margin-bottom: 5px;
+      color: white;
+    }
+
+    input,
+    select,
+    button {
+      margin-bottom: 10px;
+    }
+  }
+}
+
+.bet-text {
+  width: 150px;
+  text-align: left;
+}
+
+.bet-button {
+  width: 150px
+}
+
+.bet-input {
+  width: 144px;
+  text-align: center;
+}
+
+.bet-select {
+  width: 150px
+}
+
+.log {
+  float: right;
+  background-color: black;
+  color: white;
+}
+
+.pot-win {
+  color: white;
+}
+
+.box {
+  background-color: #FF3131;
+  padding-left: 6px;
+  padding-top: 10px;
+}
+
+.logo {
+  width: 50px;
+  height: 50px;
+}
+

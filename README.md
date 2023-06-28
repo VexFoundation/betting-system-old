@@ -1,9 +1,5 @@
 # betting-system-1
-This is the first iteration of the betting smart contract for the VEX project. It is programmed in Rust
-and can be uploaded to the NEAR network. All development was done using the NEAR testnet. This
-first iteration just includes the smart contract with no DAO, FT or frontend connected. The contract
-allows users to make a bet, view matches and view bets. It also allows the contract owner to create a
-new match and finish a match.
+This is the smart contract and frontend for the betting system for the VEX project. It runs on the testnet and has no DAO, oracle or FT associated with it.
 
 <br />
 
@@ -15,7 +11,7 @@ new match and finish a match.
 <br />
 
 ## 1. Build and Deploy the Contract
-You can automatically compile and deploy the contract in the NEAR testnet by running:
+You can automatically compile and deploy the contract in the NEAR testnet by running (inside of contract):
 
 ```bash
 ./deploy.sh
@@ -37,7 +33,7 @@ cat ./neardev/dev-account
 
 <br />
 
-The contract can be used with the following commands: 
+The contract can be used via the CLI with the following commands: 
 
 ```bash
 near call <dev account name> create_match '{"team_1": " ", "team_2": " ", "in_odds_1": " ", "in_odds_2": " ", "date": " "}' --accountId <dev account name>
@@ -45,6 +41,11 @@ near call <dev account name> finish_match '{"match_id": " ", "winning_team": " "
 near call <dev account name> make_bet '{"match_id": " ", "decision": " "}' --amount 2 --accountId <your account name>
 near view <dev account name> view_matches '{"match_id": " "}'
 near view <dev account name> view_bets '{"match_id": " ", "name": " "}'
+near view <dev account name> view_potential_winnings '{"match_id": " ", "team": " ", "bet_amount": " "}'
 ```
 
-Please read through the pdf for a more in depth explanation of the code.
+The contract can be interacted with using the frontend via the command:
+
+```bash
+npm start
+```

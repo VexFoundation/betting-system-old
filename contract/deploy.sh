@@ -10,4 +10,4 @@ fi
 echo ">> Deploying contract"
 
 # https://docs.near.org/tools/near-cli#near-dev-deploy
-near dev-deploy --wasmFile ./target/wasm32-unknown-unknown/release/betting_iteration_1.wasm
+near dev-deploy ./target/wasm32-unknown-unknown/release/betting-system.wasm

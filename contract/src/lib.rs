@@ -83,7 +83,7 @@ impl MatchList { // Implementation of MatchList
         
 
         self.bet_counter += current_match.promised_winnings.abs(); // Adds this back on with changed amount
-
+        // Need to change this, check can pay out before adding to the promised winnings as if transaction fails will still add to the promised winnings
         if self.bet_counter >= (env::account_balance() / ONE_NEAR) as f64 { // If the bet counter is larger than amount available in the contract then panics (includes attatched NEAR)
             panic!("Sorry you can't make a bet as we wouldn't definetly be able to pay out")
         }
@@ -159,7 +159,6 @@ impl MatchList { // Implementation of MatchList
 
     // Private call function that allows the contract account to finish a match, input the winning team
     #[private]
-    #[payable]
     pub fn finish_match(&mut self, match_id: String, winning_team: String) {
         let mut current_match = self.matches.get(&match_id).expect("No match exists with that id"); // Panics if doesn't find the match
         
@@ -178,10 +177,11 @@ impl MatchList { // Implementation of MatchList
                     // Payout this person (convert to balance)
                     let winner: AccountId = current_match.bets[i].bettor.clone();
                     let winnings: f64 = current_match.bets[i].potential_winnings;
-                    Promise::new(winner.clone()) // Promise to the account that made the bet
-                        .transfer(( winnings * (ONE_NEAR as f64)) as u128 ); // Transfers the potential winnings converted to Balance type (u128) in yoctoNEAR
-                    log!("Transfered {} NEAR to {}", winnings, winner); 
-                    // Need to add in an error checking function here
+
+                    Self::pay(winner, winnings);
+                    //Extra checks?
+                    //Update bet payed out for each individual sequencially not at end as one might be payed out but not others
+
                     current_match.bets[i].payed_out = true;
                 }
                 
@@ -197,16 +197,55 @@ impl MatchList { // Implementation of MatchList
 
     // View function that allows the contract account to view the bets for a single match
     // Input either the bet ID to view a single bet or "all" to view all bets for that match
-    pub fn view_bets(&self, match_id: String, name: String) -> Vec<Bet>{
+    pub fn view_bets(&self, match_id: String, name: String) -> Vec<(String, String, f64, f64, bool)> {
         let current_match = self.matches.get(&match_id).expect("No match exists with that id"); // Panics if doesn't find the match
-        if name == "all" {
-            current_match.bets.into_iter().collect()
-        } else {
-            current_match.bets.into_iter().filter(|bet| bet.bettor.to_string() == name).collect()
-        }
+        let mut bet_list = Vec::new(); // Creates a new empty list where the required values will get added to 
+        for i in 0..current_match.bets.len() {
+            let i: usize = i.try_into().unwrap();
+            let username = (current_match.bets[i].bettor).to_string();
+            if name == "all" || name == username { // If all selected then it will selected all the bets, if not it will selected the bets with the correct name
+                let team = (current_match.bets[i].decision).to_string(); // Seperates the infomation from the Bet struct into variables
+                let bet = current_match.bets[i].bet_amount;
+                let winnings = current_match.bets[i].potential_winnings;
+                let payed = current_match.bets[i].payed_out;
+
+                let individual_bet = (username, team, bet, winnings, payed); // Creates a tuple containing the information
+                bet_list.push(individual_bet); } // Adds the tuple to the bet list
+            }
+
+        bet_list // Returns the list of bets
 
     }
 
+    pub fn view_potential_winnings(&self, match_id: String, team: String, bet_amount: String) -> f64 {
+        let mut current_match = self.matches.get(&match_id).expect("No match exists with that id"); // Panics if doesn't find the match
+
+        if team != current_match.team_1 && team != current_match.team_2 { // Checks valid winner input 
+            panic!("That is not a valid team")
+        }
+
+        let bet_amount_f64: f64 = bet_amount.parse().unwrap();
+
+        let mut potential_winnings: f64 = 0.0;
+        if team == current_match.team_1 { // If they have picked team 1
+            potential_winnings = find_winnings(current_match.team_1_total_bets, current_match.team_2_total_bets, bet_amount_f64);
+        } else if team == current_match.team_2 { // If they have picked team 2
+            potential_winnings = find_winnings(current_match.team_2_total_bets, current_match.team_1_total_bets, bet_amount_f64);
+        }
+
+        potential_winnings
+
+    }
+
+
+    //Might need to add private and then sign the function call with this contracts accountID
+    #[payable]
+    fn pay(winner: AccountId, winnings: f64) -> Promise {
+        Promise::new(winner.clone()) // Promise to the account that made the bet
+            .transfer(( winnings * (ONE_NEAR as f64)) as u128 ) // Transfers the potential winnings converted to Balance type (u128) in yoctoNEAR
+        //log!("Transfered {} NEAR to {}", winnings, winner); 
+        //might need to add in an error checking function here, could be ok jsut returning promise
+}
 }
 
 // Function that can only be called by the code. Gets the starting odds from the total bets and adds to 5% take
