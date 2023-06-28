@@ -19,5 +19,5 @@ cd frontend || exit 1
 # Set execute permissions for start.sh
 chmod +x start.sh
 
-# Run npm start again
+# Run npm start
 npm start
