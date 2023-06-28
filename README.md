@@ -1,4 +1,4 @@
-# betting-system-1
+# betting-system
 This is the smart contract and frontend for the betting system for the VEX project. It runs on the testnet and has no DAO, oracle or FT associated with it.
 
 <br />
