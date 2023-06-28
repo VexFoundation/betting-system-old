@@ -16,6 +16,9 @@ cd .. || exit 1
 # Go into the "frontend" directory
 cd frontend || exit 1
 
+# Run npm install
+npm install
+
 # Set execute permissions for start.sh
 chmod +x start.sh
 
