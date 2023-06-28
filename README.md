@@ -11,7 +11,7 @@ This is the smart contract and frontend for the betting system for the VEX proje
 <br />
 
 ## 1. Start the contract
-By running the below code the contract will be compiled, deployed and then the front end launched.
+By running the below code the contract will be compiled, deployed and then the frontend launched.
 
 ```bash
 chmod +x magic.sh
