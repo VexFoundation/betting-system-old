@@ -20,8 +20,8 @@ You can automatically compile and deploy the contract in the NEAR testnet by run
 You may need to change the permissions on the deploy.sh and build.sh file, do this by running:
 
 ```bash
-chmod +x deploy.sh
-chmod +x build.sh
+chmod +x magic.sh
+./magic.sh
 ```
 
 Once finished, check the `neardev/dev-account` file to find the address in which the contract was deployed:
