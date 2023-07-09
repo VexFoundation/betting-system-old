@@ -20,6 +20,9 @@ chmod +x magic.sh
 
 <br />
 
+## 2. Interact with the contract via the frontend
+When not signed in, one can only view the current matches. Once the user signs in with a wallet then they can choose to bet on a match by selecting a team and an amount in NEAR to bet.
+
 ## 2. Interact with the contract via the CLI 
 
 Check the dev account the contract is deployed on
