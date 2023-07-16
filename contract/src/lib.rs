@@ -262,7 +262,7 @@ impl MatchList { // Implementation of MatchList
             self.error_matches.insert(&match_id, &x); // Inserts the match into the complete_matches
 
             if state == "future" { 
-                self.bet_counter -= current_match.promised_winnings.abs(); // Removes the promised winnings from the bet_counter
+                self.bet_counter -= x.promised_winnings.abs(); // Removes the promised winnings from the bet_counter
                 self.future_matches.remove(&match_id); // Removes the match from future_matches
             } else if state == "in_progress" {
                 self.in_progress_matches.remove(&match_id); // Removes the match from in_progress_matches
