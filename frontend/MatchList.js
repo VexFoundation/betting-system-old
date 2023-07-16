@@ -25,8 +25,8 @@ const MatchList = ({ isSignedIn, theContract}) => {
           <div className="match-list">
             {matches.map(match => (
               <div key={match[0]}>
-
-                {!match[6] && <button className="match-preview" onClick={(e) => handleClick(e, match, true)} disabled={!isSignedIn}><div>
+                
+                {<button className="match-preview" onClick={(e) => handleClick(e, match, true)} disabled={!isSignedIn}><div>
                     <h2> {match[1]} vs {match[3]} </h2>
                     <p> {match[2]} to {match[4]} </p> 
                   </div>
