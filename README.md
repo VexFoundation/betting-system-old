@@ -35,7 +35,9 @@ The contract can be used via the CLI with the following commands:
 
 ```bash
 near call <dev account name> create_match '{"team_1": " ", "team_2": " ", "in_odds_1": " ", "in_odds_2": " ", "date": " "}' --accountId <dev account name>
+near call <dev account name> end_betting '{"match_id": " "}' --accountId <dev account name>
 near call <dev account name> finish_match '{"match_id": " ", "winning_team": " "}' --accountId <dev account name>
+near call <dev account name> return_funds '{"match_id": " ", "state": " "}' --accountId <dev account name>
 near call <dev account name> make_bet '{"match_id": " ", "decision": " "}' --amount 2 --accountId <your account name>
 near view <dev account name> view_matches '{"match_id": " "}'
 near view <dev account name> view_bets '{"match_id": " ", "name": " "}'
