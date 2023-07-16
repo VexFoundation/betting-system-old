@@ -9,7 +9,7 @@ export class TheContract {
 
   async getMatches() {
     // View all the matches
-    const matches = await this.wallet.viewMethod({ contractId: this.contractId, method: "view_matches", args: { match_id: "all"}})
+    const matches = await this.wallet.viewMethod({ contractId: this.contractId, method: "view_future_matches", args: { match_id: "all"}})
     return matches
   }
 
