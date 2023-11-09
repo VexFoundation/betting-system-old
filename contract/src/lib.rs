@@ -1,9 +1,9 @@
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::collections::UnorderedMap;
-use near_sdk::{env, AccountId, Balance, Promise, PromiseResult, near_bindgen, log, ONE_NEAR};
-
-
+use near_sdk::{env, AccountId, Balance, Promise, PromiseResult, near_bindgen, log, ONE_NEAR, ONE_YOCTO};
+use serde_json::json;
+const ONE_USDC: f64 = 1000000000000000000000000.0;
 
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize)]
@@ -68,58 +68,79 @@ impl Default for MatchList {
     }
   }
 
+  // Change promised winnings to USDC not NEAR
 
 #[near_bindgen]
 impl MatchList { // Implementation of MatchList
 
-    // Call function that allows the user to make a bet on a future match on either team 1 or team 2 and attatch NEAR 
-    #[payable]
-    pub fn make_bet(&mut self, match_id: String, decision: String) {
+    // Call function that allows the user to make a bet on a future match on either team 1 or team 2 in USDC
+    pub fn ft_on_transfer(&mut self, sender_id: String, amount: String, msg: String) -> String {
         let bettor: AccountId = env::signer_account_id(); // Gets the signers account ID
-        let bet_amount = env::attached_deposit() as f64 / ONE_NEAR as f64; // Gets the amount of near attatched to the bet
-        assert!(bet_amount >= 0.1, "You need to attatch atleast 0.1 NEAR"); // Makes sure NEAR is attatched, needs to be set higher than gas
+        let match_id: String = "".to_string();
+        let decision: String = "".to_string();
+        let bet_amount = amount.parse::<f64>().unwrap();
 
-        // Finds the match we are talking about
-        let mut current_match = self.future_matches.get(&match_id).expect("No match exists with that id"); // Finds the desired match, panics if doesn't find the match
-
-        assert!(current_match.match_state == MatchState::Future, "The game is complete or in progress"); // Match state isn't Future
+        // Splits the msg into match_id and decision, change to JSON
+        let mut parts = msg.split_whitespace();
+    
+        let (first_word, second_word) = (parts.next(), parts.next());
         
-        // Calculates how much will be payed out, will change as odds change with amount betted
-        let mut potential_winnings: f64 = 0.0;
-        if decision == current_match.team_1 { // If they have picked team 1
-            potential_winnings = find_winnings(current_match.team_1_total_bets, current_match.team_2_total_bets, bet_amount);
-        } else if decision == current_match.team_2 { // If they have picked team 2
-            potential_winnings = find_winnings(current_match.team_2_total_bets, current_match.team_1_total_bets, bet_amount);
-        } else { // If not inputted correct team
-            panic!("That is not a valid team")
+        if let (Some(match_id), Some(decision)) = (first_word, second_word) {
+            let match_id = String::from(match_id);
+            let decision = String::from(decision);
+            
+            log!("Match ID: {}", match_id);
+            log!("Decision: {}", decision);
+
+            let bet_amount = bet_amount / ONE_USDC; // Gets the amount attatched to the bet
+
+            // Finds the match we are talking about
+            let mut current_match = self.future_matches.get(&match_id).expect("No match exists with that id"); // Finds the desired match, panics if doesn't find the match
+    
+            assert!(current_match.match_state == MatchState::Future, "The game is complete or in progress"); // Match state isn't Future
+            
+            // Calculates how much will be payed out, will change as odds change with amount betted
+            let mut potential_winnings: f64 = 0.0;
+            if decision == current_match.team_1 { // If they have picked team 1
+                potential_winnings = find_winnings(current_match.team_1_total_bets, current_match.team_2_total_bets, bet_amount);
+            } else if decision == current_match.team_2 { // If they have picked team 2
+                potential_winnings = find_winnings(current_match.team_2_total_bets, current_match.team_1_total_bets, bet_amount);
+            } else { // If not inputted correct team
+                panic!("That is not a valid team")
+            }
+    
+    
+            self.bet_counter -= current_match.promised_winnings.abs(); // Takes off the absolute promised winnings as they will change
+    
+            // Adds the bet to the total bets and changes the promised_winnings for that match
+            if decision == current_match.team_1 { // If they have picked team 1
+                current_match.team_1_total_bets += bet_amount;
+                current_match.promised_winnings += potential_winnings;
+            } else if decision == current_match.team_2 { // If they have picked team 2
+                current_match.team_2_total_bets += bet_amount;
+                current_match.promised_winnings -= potential_winnings;
+            }
+            
+    
+            self.bet_counter += current_match.promised_winnings.abs(); // Adds this back on with changed amount
+            if self.bet_counter >= (env::account_balance() / ONE_NEAR) as f64 { // If the bet counter is larger than amount available in the contract then panics (includes attatched NEAR)
+                panic!("Sorry you can't make a bet as we wouldn't definetly be able to pay out")
+            }
+    
+            let payed_out = PayedOut::YetToBePayed; 
+            // Potential winnings are stored in yoctoNEAR
+            let new_bet = Bet{bettor, decision: decision.clone(), bet_amount: bet_amount.clone(), potential_winnings: potential_winnings.clone(), payed_out: payed_out.clone()}; // Creates a new bet with the fields filled in
+            current_match.bets.push(new_bet); // Pushes the new bet to the bets list for that match
+            self.future_matches.insert(&match_id, &current_match); // Updates the match
+            log!("You have made a bet on {}, with ${} , at odds {}, and potential winnings {}", decision, bet_amount, potential_winnings / bet_amount, potential_winnings);
+
+        } else {
+            panic!("Not enough words in the input string");
         }
 
 
-        self.bet_counter -= current_match.promised_winnings.abs(); // Takes off the absolute promised winnings as they will change
-
-        // Adds the bet to the total bets and changes the promised_winnings for that match
-        if decision == current_match.team_1 { // If they have picked team 1
-            current_match.team_1_total_bets += bet_amount;
-            current_match.promised_winnings += potential_winnings;
-        } else if decision == current_match.team_2 { // If they have picked team 2
-            current_match.team_2_total_bets += bet_amount;
-            current_match.promised_winnings -= potential_winnings;
-        }
-        
-
-        self.bet_counter += current_match.promised_winnings.abs(); // Adds this back on with changed amount
-        if self.bet_counter >= (env::account_balance() / ONE_NEAR) as f64 { // If the bet counter is larger than amount available in the contract then panics (includes attatched NEAR)
-            panic!("Sorry you can't make a bet as we wouldn't definetly be able to pay out")
-        }
-
-        let payed_out = PayedOut::YetToBePayed; 
-        // Potential winnings are stored in yoctoNEAR
-        let new_bet = Bet{bettor, decision: decision.clone(), bet_amount: bet_amount.clone(), potential_winnings: potential_winnings.clone(), payed_out: payed_out.clone()}; // Creates a new bet with the fields filled in
-        current_match.bets.push(new_bet); // Pushes the new bet to the bets list for that match
-        self.future_matches.insert(&match_id, &current_match); // Updates the match
-        log!("You have made a bet on {}, with {} NEAR, at odds {}, and potential winnings {}", decision, bet_amount, potential_winnings / bet_amount, potential_winnings)
+        return "0".to_string()
     }
-
 
     // View function that allows the user to view all future matches
     pub fn view_future_matches(&self, match_id: String) -> Vec<(String, String, f64, String, f64, Option<String>, MatchState)> {
@@ -140,7 +161,7 @@ impl MatchList { // Implementation of MatchList
                 match_list.push(individual_match) // Pushes this tuple to the list
             }
         } else {
-            let current_match = self.complete_matches.get(&match_id).expect("No match exists with that id"); // Finds the desired match, panics if doesn't find the match
+            let current_match = self.future_matches.get(&match_id).expect("No match exists with that id"); // Finds the desired match, panics if doesn't find the match
             let team_name_1 = (current_match.team_1).to_string();
             let team_name_2 = (current_match.team_2).to_string();
             let winner = current_match.winner;
@@ -152,7 +173,6 @@ impl MatchList { // Implementation of MatchList
 
         match_list // Returns the list
     }
-
 
     // Private call function that allows the contract account to create a new match, need to input teams, odds and the date of the match
     #[private]
@@ -210,11 +230,16 @@ impl MatchList { // Implementation of MatchList
         for i in 0..current_match.bets.len() { // Loops through all bets
             if current_match.bets[i].payed_out == PayedOut::YetToBePayed { // Checks not already payed out and they bet on the winner
                 if current_match.bets[i].decision == winning_team { // Checks they bet on the winner
+                    
                     let winner: AccountId = current_match.bets[i].bettor.clone(); // Gets the account Id of each winner
-                    let winnings: f64 = current_match.bets[i].potential_winnings; // Gets the amount they win
-                    Self::pay(winner, winnings); // Pays them
-                    //Extra checks?
-                    //Update bet payed out for each individual sequencially not at end as one might be payed out but not others
+                    let winnings: f64 = current_match.bets[i].potential_winnings * ONE_USDC; // Gets the amount they win
+                    let args = json!({
+                        "receiver_id": winner,
+                        "amount": winnings.to_string(),
+                        "memo": "Winnings",
+                    }).to_string().into_bytes();
+                    Promise::new("cusd.fakes.testnet".parse().unwrap()).function_call("ft_transfer".to_string(), args, ONE_YOCTO, near_sdk::Gas(100000000000000));
+                    //Change to ft_transfer_call
 
                     current_match.bets[i].payed_out = PayedOut::Payed;
                 }
@@ -247,12 +272,17 @@ impl MatchList { // Implementation of MatchList
                 if x.bets[i].payed_out == PayedOut::YetToBePayed { // Checks not already payed out and they bet on the winner
                     // Payout this person (convert to balance)
                     let account: AccountId = x.bets[i].bettor.clone();
-                    let returns: f64 = x.bets[i].bet_amount;
+                    let returns: f64 = x.bets[i].bet_amount * ONE_USDC;
 
-                    Self::pay(account, returns);
+                    let args = json!({
+                        "receiver_id": account,
+                        "amount": returns.to_string(),
+                        "memo": "Return funds",
+                    }).to_string().into_bytes();
+                    Promise::new("cusd.fakes.testnet".parse().unwrap()).function_call("ft_transfer".to_string(), args, ONE_YOCTO, near_sdk::Gas(100000000000000));
+
                     //Extra checks?
                     //Update bet payed out for each individual sequencially not at end as one might be payed out but not others
-
                     x.bets[i].payed_out = PayedOut::ReturnPay;       
                 }
             } 
@@ -320,7 +350,7 @@ impl MatchList { // Implementation of MatchList
 
     }
 
-
+    // Can remove
     //Might need to add private and then sign the function call with this contracts accountID
     #[payable]
     fn pay(receiver: AccountId, amount: f64) -> Promise {
@@ -352,5 +382,6 @@ fn find_winnings(betted_team_bets: f64, other_team: f64, bet_amount: f64) -> f64
     let ln_target: f64 = (betted_team_bets + bet_amount) / betted_team_bets;
     (1.0 / 1.05) * (bet_amount + other_team * ln_target.ln())
 }
+
 
 
